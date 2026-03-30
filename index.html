@@ -5643,11 +5643,23 @@ Am7
         
         const tooltip = document.getElementById('chordTooltip');
         const svgLines = `
+            <text x="5" y="23" font-size="8" fill="gray">1</text>
+            <text x="5" y="43" font-size="8" fill="gray">2</text>
+            <text x="5" y="63" font-size="8" fill="gray">3</text>
+            <text x="5" y="83" font-size="8" fill="gray">4</text>
             <line x1="20" y1="10" x2="80" y2="10" stroke-width="4" stroke="var(--text-color)"/>
+            <line x1="20" y1="30" x2="80" y2="30" stroke="#ccc"/>
+            <line x1="20" y1="50" x2="80" y2="50" stroke="#ccc"/>
+            <line x1="20" y1="70" x2="80" y2="70" stroke="#ccc"/>
+            <line x1="20" y1="90" x2="80" y2="90" stroke="#ccc"/>
             <line x1="20" y1="10" x2="20" y2="90" stroke="#ccc"/>
             <line x1="40" y1="10" x2="40" y2="90" stroke="#ccc"/>
             <line x1="60" y1="10" x2="60" y2="90" stroke="#ccc"/>
             <line x1="80" y1="10" x2="80" y2="90" stroke="#ccc"/>
+            <text x="20" y="105" font-size="8" fill="var(--text-color)" text-anchor="middle">G</text>
+            <text x="40" y="105" font-size="8" fill="var(--text-color)" text-anchor="middle">C</text>
+            <text x="60" y="105" font-size="8" fill="var(--text-color)" text-anchor="middle">E</text>
+            <text x="80" y="105" font-size="8" fill="var(--text-color)" text-anchor="middle">A</text>
         `;
         const svgDots = chord.d.map(dot => `<circle cx="${20*dot.s}" cy="${dot.f*20}" r="6" fill="var(--accent)"/>`).join('');
         
@@ -5656,7 +5668,7 @@ Am7
                 <h3 style="margin:0; font-size: 1.5rem; color:var(--accent)">${chord.n}</h3>
                 <span style="cursor:pointer; font-size:1.5rem; line-height: 1;" onclick="document.getElementById('chordTooltip').style.display='none'">&times;</span>
             </div>
-            <svg viewBox="0 0 100 100" style="width:120px; height:120px; display:block; margin:0 auto;">
+            <svg viewBox="0 0 100 110" style="width:120px; height:132px; display:block; margin:0 auto;">
                 ${svgLines}
                 ${svgDots}
             </svg>
@@ -5702,7 +5714,7 @@ Am7
     const masterCompressor = audioCtx.createDynamicsCompressor();
     masterCompressor.connect(audioCtx.destination);
 
-    function init() {
+   function init() {
         initFavorites(); 
         const listContainer = document.getElementById('all-chords-list');
         const gameBtnsContainer = document.getElementById('game-btns');
@@ -5717,7 +5729,36 @@ Am7
             chordsData.filter(c => c.t === cat).forEach(chord => {
                 const box = document.createElement('div');
                 box.className = 'chord-box';
-                box.innerHTML = `<h5>${chord.n}</h5><svg viewBox="0 0 100 100"><line x1="20" y1="10" x2="80" y2="10" stroke-width="4" stroke="#333"/><line x1="20" y1="10" x2="20" y2="90" stroke="#ccc"/><line x1="40" y1="10" x2="40" y2="90" stroke="#ccc"/><line x1="60" y1="10" x2="60" y2="90" stroke="#ccc"/><line x1="80" y1="10" x2="80" y2="90" stroke="#ccc"/>${chord.d.map(dot=>`<circle cx="${20*dot.s}" cy="${dot.f*20}" r="6" fill="var(--accent)"/>`).join('')}</svg>`;
+                
+                // Добавлены лады, струны и кнопка прослушивания
+                box.innerHTML = `
+                <h5>${chord.n}</h5>
+                <svg viewBox="0 0 100 110" style="margin-bottom: 10px; width: 100%;">
+                    <text x="5" y="23" font-size="8" fill="gray">1</text>
+                    <text x="5" y="43" font-size="8" fill="gray">2</text>
+                    <text x="5" y="63" font-size="8" fill="gray">3</text>
+                    <text x="5" y="83" font-size="8" fill="gray">4</text>
+                    
+                    <line x1="20" y1="10" x2="80" y2="10" stroke-width="4" stroke="var(--text-color)"/>
+                    <line x1="20" y1="30" x2="80" y2="30" stroke="#ccc"/>
+                    <line x1="20" y1="50" x2="80" y2="50" stroke="#ccc"/>
+                    <line x1="20" y1="70" x2="80" y2="70" stroke="#ccc"/>
+                    <line x1="20" y1="90" x2="80" y2="90" stroke="#ccc"/>
+                    
+                    <line x1="20" y1="10" x2="20" y2="90" stroke="#ccc"/>
+                    <line x1="40" y1="10" x2="40" y2="90" stroke="#ccc"/>
+                    <line x1="60" y1="10" x2="60" y2="90" stroke="#ccc"/>
+                    <line x1="80" y1="10" x2="80" y2="90" stroke="#ccc"/>
+                    
+                    ${chord.d.map(dot=>`<circle cx="${20*dot.s}" cy="${dot.f*20}" r="6" fill="var(--accent)"/>`).join('')}
+                    
+                    <text x="20" y="105" font-size="8" fill="var(--text-color)" text-anchor="middle">G</text>
+                    <text x="40" y="105" font-size="8" fill="var(--text-color)" text-anchor="middle">C</text>
+                    <text x="60" y="105" font-size="8" fill="var(--text-color)" text-anchor="middle">E</text>
+                    <text x="80" y="105" font-size="8" fill="var(--text-color)" text-anchor="middle">A</text>
+                </svg>
+                <button class="pattern-btn" style="font-size: 0.8rem; padding: 6px 10px; width: 100%; border-radius: 20px; box-shadow: none;" onclick="playTooltipChord('${chord.n}')">▶ Слушать</button>`;
+                
                 grid.appendChild(box);
 
                 const btn = document.createElement('button');
