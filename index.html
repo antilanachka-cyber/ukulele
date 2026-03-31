@@ -677,6 +677,14 @@
 
 <script>
     // --- ЛОГИКА ВЫБОРА УСТРОЙСТВА ---
+
+	// Разблокировка звука для мобилок
+document.addEventListener('click', function() {
+    if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+    }
+}, { once: true });
+	
     function startGame(deviceType) {
         document.getElementById('device-overlay').style.opacity = '0';
         setTimeout(() => {
