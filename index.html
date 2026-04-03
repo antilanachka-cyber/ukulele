@@ -345,6 +345,51 @@
         body.mobile-mode .modal-content { width: 85%; padding: 30px 20px; margin: 10% auto; border-radius: 25px; }
         body.mobile-mode .zoom-wrapper { flex-direction: column; align-items: center; }
         body.mobile-mode .img-zoom-result { width: 100%; max-width: 300px; height: 300px; border-radius: 20px; }
+
+
+/* --- ИСПРАВЛЕНИЯ ДЛЯ ТЕЛЕФОНА (Социальный блок) --- */
+        @media (max-width: 768px) {
+            /* 1. Делаем верхнее меню с кнопками прокручиваемым вбок (свайпом) */
+            nav {
+                display: flex;
+                overflow-x: auto; 
+                white-space: nowrap;
+                padding-bottom: 5px; /* Немного места снизу */
+                -webkit-overflow-scrolling: touch; /* Плавный скролл на iPhone */
+            }
+            
+            /* Прячем некрасивую полосу прокрутки, оставляя саму функцию свайпа */
+            nav::-webkit-scrollbar {
+                display: none;
+            }
+            
+            /* 2. Чтобы кнопки вкладок ("Справочник", "Сообщество" и т.д.) не сплющивались */
+            .tab-btn {
+                flex-shrink: 0; 
+                font-size: 0.9rem;
+                padding: 10px 15px;
+            }
+
+            /* 3. Сужаем окно входа/регистрации и уменьшаем отступы */
+            #authModal .modal-content {
+                padding: 25px !important;
+                width: 90% !important;
+                box-sizing: border-box;
+            }
+
+            /* 4. Кнопки "Прикрепить" и "Опубликовать" делаем друг под другом */
+            #social .chord-btn, #social .pattern-btn {
+                width: 100%;
+                margin-left: 0;
+                margin-right: 0;
+            }
+            
+            /* 5. Уменьшаем шрифт заголовков в ленте */
+            .modal-song-title {
+                font-size: 1.5rem !important;
+            }
+        }
+
     </style>
 </head>
 <body>
