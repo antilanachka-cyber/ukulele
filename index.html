@@ -284,9 +284,10 @@
 
         .autoscroll-bar {
             position: sticky; top: -50px; background: var(--card-bg); padding: 20px; border-radius: 20px;
-            display: flex; align-items: center; justify-content: space-between; gap: 20px;
+            display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap; /* Добавлено flex-wrap */
             border: none; margin-bottom: 30px; z-index: 10; font-family: 'Nunito', sans-serif; box-shadow: var(--sun-shadow); 
         }
+
         .autoscroll-btn { padding: 12px 25px; background: var(--accent); border: none; color: white; border-radius: 40px; cursor: pointer; font-weight: 900; transition: 0.3s; box-shadow: 0 5px 15px rgba(240, 113, 103, 0.4);}
         .autoscroll-btn:hover { transform: scale(1.08) translateY(-2px); box-shadow: 0 8px 20px rgba(240, 113, 103, 0.6); }
         .autoscroll-speed { flex: 1; display: flex; align-items: center; gap: 15px; font-size: 1.1rem; font-weight: 900; color: var(--primary-color); }
@@ -394,6 +395,11 @@
                 <span>Мин</span>
                 <input type="range" id="scrollSpeed" min="1" max="10" value="3" oninput="updateScrollSpeed()">
                 <span>Макс</span>
+            </div>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <span style="font-weight: 900; color: var(--primary-color);">Текст:</span>
+                <button class="autoscroll-btn" style="padding: 8px 15px; font-size: 1.1rem; min-width: 45px;" onclick="changeFontSize(-1)">A-</button>
+                <button class="autoscroll-btn" style="padding: 8px 15px; font-size: 1.1rem; min-width: 45px;" onclick="changeFontSize(1)">A+</button>
             </div>
         </div>
 
@@ -6276,6 +6282,21 @@ Am7
         init();
         initBuilder();
     };
+
+// --- УПРАВЛЕНИЕ РАЗМЕРОМ ТЕКСТА ---
+    let currentLyricsFontSize = 1.2; // Базовый размер шрифта в rem (как в CSS)
+
+    function changeFontSize(step) {
+        currentLyricsFontSize += step * 0.15; // Шаг изменения размера
+        
+        // Ограничиваем минимальный и максимальный размер, чтобы текст не пропал и не стал гигантским
+        if (currentLyricsFontSize < 0.8) currentLyricsFontSize = 0.8;
+        if (currentLyricsFontSize > 3.0) currentLyricsFontSize = 3.0;
+
+        // Применяем новый размер к контейнеру с текстом песни
+        document.getElementById('modalBody').style.fontSize = currentLyricsFontSize + 'rem';
+    }
+
 </script>
 </body>
 </html>
