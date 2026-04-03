@@ -671,6 +671,18 @@
     <div style="text-align:center">
         <h2>Конструктор песен</h2>
         <p>Выбери первый аккорд, и мы подсветим те, которые гармонично звучат следом!</p>
+        
+        <div id="progression-display" style="min-height: 60px; margin: 20px auto; padding: 20px; background: var(--card-bg); border-radius: 20px; box-shadow: inset 0 5px 15px rgba(0,0,0,0.05); display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; align-items: center; max-width: 800px;">
+            <span style="opacity: 0.5;">Твоя последовательность пуста...</span>
+        </div>
+
+        <div class="pattern-selector" style="margin-bottom: 30px; gap: 10px;">
+            <button class="pattern-btn" style="background: var(--accent); font-size: 1rem; padding: 12px 20px;" onclick="clearProgression()">🗑️ Очистить</button>
+            <button class="pattern-btn" style="font-size: 1rem; padding: 12px 20px;" onclick="playProgression('D.U.D.U.')">«Четверка»</button>
+            <button class="pattern-btn" style="font-size: 1rem; padding: 12px 20px;" onclick="playProgression('D.DU.UDU')">«Шестерка»</button>
+            <button class="pattern-btn" style="font-size: 1rem; padding: 12px 20px;" onclick="playProgression('DDUUDDDU')">«Восьмерка»</button>
+        </div>
+
         <div class="chord-selector" id="builder-btns"></div>
     </div>
 </div>
@@ -5564,7 +5576,7 @@ Am7
         { n: 'D', f: [440, 293, 370, 587], d: [{s:1, f:2}, {s:2, f:2}, {s:3, f:2}], t: 'Мажорные' },
         { n: 'E', f: [415, 329, 415, 493], d: [{s:1, f:4}, {s:2, f:4}, {s:3, f:4}, {s:4, f:2}], t: 'Мажорные' },
         { n: 'F', f: [440, 261, 349, 440], d: [{s:1, f:2}, {s:3, f:1}], t: 'Мажорные' },
-        { n: 'G', f: [392, 293, 392, 493], d: [{s:1, f:2}, {s:2, f:3}, {s:3, f:2}], t: 'Мажорные' },
+        { n: 'G', f: [392, 293, 392, 493], d: [{s:2, f:2}, {s:3, f:3}, {s:4, f:2}], t: 'Мажорные' },
         { n: 'A', f: [440, 277, 330, 440], d: [{s:1, f:2}, {s:2, f:1}], t: 'Мажорные' },
         { n: 'B', f: [466, 311, 370, 466], d: [{s:1, f:4}, {s:2, f:3}, {s:3, f:2}, {s:4, f:2}], t: 'Мажорные' },
 
@@ -6118,24 +6130,145 @@ Am7
         'Gbdim': ['G', 'Gm', 'Eb'],      
     };
 
+    // --- ЛОГИКА КОНСТРУКТОРА ПЕСЕН ---
+    let builderProgression = []; // Массив для хранения выбранных аккордов
+
     function initBuilder() {
         const builderContainer = document.getElementById('builder-btns');
+        builderContainer.innerHTML = ''; // Очищаем перед инициализацией
+        
         chordsData.forEach(chord => {
             const btn = document.createElement('button');
             btn.className = 'chord-btn';
             btn.innerText = chord.n;
             btn.onclick = (e) => {
-                if (audioCtx.state === 'suspended') audioCtx.resume();
+                // 1. Проигрываем звук (использует аудиофайл, если есть, или синтез)
+                playTooltipChord(chord.n);
+
+                // 2. Выделяем активный и рекомендуемые
                 currentChord = chord;
-                strum(true, 0);
                 document.querySelectorAll('#builder-btns .chord-btn').forEach(b => b.classList.remove('active', 'recommended'));
                 e.target.classList.add('active');
+                
                 const recs = progressionRules[chord.n] || ['C', 'G', 'Am', 'F']; 
                 document.querySelectorAll('#builder-btns .chord-btn').forEach(b => {
                     if (recs.includes(b.innerText)) b.classList.add('recommended');
                 });
+
+                // 3. Добавляем в последовательность и обновляем экран
+                builderProgression.push(chord);
+                updateProgressionDisplay();
             };
             builderContainer.appendChild(btn);
+        });
+    }
+
+    function updateProgressionDisplay() {
+        const display = document.getElementById('progression-display');
+        if (builderProgression.length === 0) {
+            display.innerHTML = '<span style="opacity: 0.5;">Твоя последовательность пуста... Кликай по аккордам ниже!</span>';
+            return;
+        }
+
+        display.innerHTML = '';
+        builderProgression.forEach((chord, index) => {
+            const badge = document.createElement('div');
+            badge.className = 'song-chords';
+            badge.style.cursor = 'pointer';
+            badge.style.margin = '0';
+            badge.innerText = chord.n;
+            badge.title = "Нажми, чтобы удалить этот аккорд";
+            
+            // Удаление конкретного аккорда по клику на него
+            badge.onclick = () => {
+                builderProgression.splice(index, 1);
+                updateProgressionDisplay();
+            };
+            display.appendChild(badge);
+        });
+    }
+
+    function clearProgression() {
+        builderProgression = [];
+        updateProgressionDisplay();
+    }
+
+    function playProgression(patternStr) {
+        if (builderProgression.length === 0) {
+            alert("Сначала добавь аккорды в последовательность!");
+            return;
+        }
+        if (isPlayingPattern) return;
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        
+        isPlayingPattern = true;
+        setButtonsState(true);
+
+        let t = 0.05; // Стартовое время
+        const beat = 0.25; // Длительность одного удара
+
+        // Проходим по всей цепочке выбранных аккордов
+        builderProgression.forEach(chord => {
+            // Проигрываем выбранный бой для текущего аккорда
+            for (let i = 0; i < patternStr.length; i++) {
+                const char = patternStr[i];
+                if (char === 'D') strumSpecific(chord, true, t);
+                else if (char === 'U') strumSpecific(chord, false, t);
+                else if (char === 'X') mutedStrumSpecific(chord, t);
+                t += beat;
+            }
+        });
+        
+        const totalDuration = t + 0.5;
+        setTimeout(() => { 
+            isPlayingPattern = false; 
+            setButtonsState(false); 
+        }, totalDuration * 1000);
+    }
+
+    // --- ФУНКЦИИ СИНТЕЗА ДЛЯ КОНКРЕТНОГО АККОРДА (Нужны для последовательности) ---
+    function pluckSpecific(chord, idx, delay = 0, volume = 0.5) {
+        const time = audioCtx.currentTime + delay;
+        const osc = audioCtx.createOscillator();
+        const filter = audioCtx.createBiquadFilter();
+        const gain = audioCtx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(chord.f[idx], time);
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(5000, time);
+        filter.frequency.exponentialRampToValueAtTime(200, time + 0.6);
+        gain.gain.setValueAtTime(0, time);
+        gain.gain.linearRampToValueAtTime(volume, time + 0.005);
+        gain.gain.exponentialRampToValueAtTime(0.01, time + 1.2);
+        osc.connect(filter);
+        filter.connect(gain);
+        gain.connect(masterCompressor);
+        osc.start(time);
+        osc.stop(time + 1.2);
+    }
+
+    function strumSpecific(chord, isDown = true, startTime = 0) {
+        const order = isDown ? [0, 1, 2, 3] : [3, 2, 1, 0];
+        order.forEach((stringIdx, i) => {
+            pluckSpecific(chord, stringIdx, startTime + i * 0.03, isDown ? 0.45 : 0.25);
+        });
+    }
+
+    function mutedStrumSpecific(chord, startTime) {
+        const order = [0, 1, 2, 3];
+        order.forEach((stringIdx, i) => {
+            const time = audioCtx.currentTime + startTime + i * 0.01;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(chord.f[stringIdx], time);
+            gain.gain.setValueAtTime(0, time);
+            gain.gain.linearRampToValueAtTime(0.2, time + 0.01);
+            gain.gain.exponentialRampToValueAtTime(0.001, time + 0.05); 
+            osc.connect(gain);
+            gain.connect(masterCompressor);
+            osc.start(time);
+            osc.stop(time + 0.05);
         });
     }
 
